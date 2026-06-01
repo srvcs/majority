@@ -1,46 +1,46 @@
 # srvcs-majority
 
-The majority-vote service of the srvcs.cloud distributed standard library.
+## Name
 
-Its single concern: **are more than half of the values in a list true?** It is a
-**leaf** — it depends on no other service and computes the answer entirely from
-the local list of booleans.
+| Field | Value |
+| --- | --- |
+| Service | `srvcs-majority` |
+| Slug | `majority` |
+| Repository | `srvcs/majority` |
+| Package | `srvcs-majority` |
+| Kind | `leaf` |
 
-```text
-count = number of true elements
-result = (count * 2) > values.len()
-```
+## Function
 
-So a strict majority is `true`, a **tie** is `false`, and the **empty list** is
-`false` (there is no majority of nothing).
+logic: are more than half of the values true
+
+## Dependencies
+
+None.
 
 ## API
 
 | Method | Path | Purpose |
 | --- | --- | --- |
-| `GET` | `/` | Service identity, concern, and (empty) dependency list |
-| `POST` | `/` | Report whether more than half of `values` are `true` |
-| `GET` | `/healthz` `/readyz` `/metrics` `/openapi.json` | srvcs service standard surface |
+| `GET` | `/` | Service identity |
+| `POST` | `/` | Evaluate the service function |
+| `GET` | `/healthz` | Liveness probe |
+| `GET` | `/readyz` | Readiness probe |
+| `GET` | `/metrics` | Prometheus metrics |
+| `GET` | `/openapi.json` | OpenAPI document |
 
-```sh
-curl -s -X POST localhost:8080/ -H 'content-type: application/json' -d '{"values": [true, true, false]}'
-# {"values":[true,true,false],"result":true}
-```
+## Inputs
 
-Responses:
+| Name | Type | Required |
+| --- | --- | --- |
+| `values` | `json[]` | yes |
 
-- `200 {"values": [...], "result": bool}` — evaluated.
-- `422 {"error": "values must be booleans"}` — an element of `values` is not a
-  JSON boolean.
+## Outputs
 
-Each element is read with `Value::as_bool`; anything that is not a JSON `true`
-or `false` (a string, a number such as `1`/`0`, `null`, an array, an object)
-makes the whole request a `422`.
-
-## Dependencies
-
-None. `srvcs-majority` is a leaf: all work is local, so a request fans out to no
-other service.
+| Name | Type |
+| --- | --- |
+| `values` | `json[]` |
+| `result` | `boolean` |
 
 ## Configuration
 
@@ -50,7 +50,13 @@ other service.
 | `SRVCS_ENV` | `development` | Environment label for logs |
 | `RUST_LOG` | `info,tower_http=info` | Tracing filter |
 
-## Local checks
+## Error Behavior
+
+- `422` means the request could not be evaluated for the documented input shape.
+- `503` means a required dependency was unavailable or returned an unexpected response.
+- Dependency validation errors are forwarded when this service delegates validation.
+
+## Local Checks
 
 ```sh
 cargo fmt --check
@@ -58,8 +64,8 @@ cargo clippy --all-targets -- -D warnings
 cargo test
 ```
 
-See [`srvcs/platform`](https://github.com/srvcs/platform) for the shared service
-standard and CI workflow.
+See the [srvcs service standard](https://github.com/srvcs/platform/blob/main/STANDARD.md) for the full operational contract.
 
-> Note: the `cargoHash` in `flake.nix` is inherited from the template and must be
-> refreshed with a `nix build` before the Nix gates pass.
+## Metadata
+
+Machine-readable service metadata lives in `srvcs.yaml`. Keep it aligned with this README when the service contract changes.

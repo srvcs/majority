@@ -1,0 +1,48 @@
+schemaVersion: 1
+name: "srvcs-majority"
+slug: "majority"
+repository: "srvcs/majority"
+package: "srvcs-majority"
+function: "logic: are more than half of the values true"
+kind: "leaf"
+categories:
+  - "logic"
+dependencies: []
+endpoints:
+  - method: "GET"
+    path: "/"
+    purpose: "Service identity"
+  - method: "POST"
+    path: "/"
+    purpose: "Evaluate the service function"
+  - method: "GET"
+    path: "/healthz"
+    purpose: "Liveness probe"
+  - method: "GET"
+    path: "/readyz"
+    purpose: "Readiness probe"
+  - method: "GET"
+    path: "/metrics"
+    purpose: "Prometheus metrics"
+  - method: "GET"
+    path: "/openapi.json"
+    purpose: "OpenAPI document"
+inputs:
+  - name: "values"
+    type: "json[]"
+    required: true
+outputs:
+  - name: "values"
+    type: "json[]"
+  - name: "result"
+    type: "boolean"
+configuration:
+  - name: "SRVCS_BIND_ADDR"
+    default: "0.0.0.0:8080"
+    purpose: "Bind address"
+  - name: "SRVCS_ENV"
+    default: "development"
+    purpose: "Environment label for logs"
+  - name: "RUST_LOG"
+    default: "info,tower_http=info"
+    purpose: "Tracing filter"
